@@ -8,6 +8,7 @@ BG_COLOR = (24, 89, 117)
 
 SPRITE_DIR_PATH = 'assets/sprites'
 FONT_PATH = 'assets/font/FREAKSOFNATUREMASSIVE.ttf'
+FONT_PATH2 = 'assets/font/open-sans/OpenSans-Semibold.ttf'
 
 ANIM_TIME_INTERVAL = 150  # milliseconds
 FAST_ANIM_TIME_INTERVAL = 15

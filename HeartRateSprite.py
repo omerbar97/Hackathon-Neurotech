@@ -1,6 +1,18 @@
 import pygame
 import math
 
+
+class HeartRateText:
+
+    def __init__(self, x, y, text, font_size, font_color):
+        self.x = x
+        self.y = y
+        self.text = text
+        self.font_size = font_size
+        self.font_color = font_color
+        self.heart_rate = 30
+
+
 class HeartRateSprite(pygame.sprite.Sprite):
 
     def __init__(self, width, height, amplitude, frequency, line_color, speed):

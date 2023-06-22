@@ -9,9 +9,10 @@ from HeartRateSprite import *
 
 
 class Text:
-    def __init__(self, app):
+    def __init__(self, app, heartRateText):
         self.app = app
-        self.font = ft.Font(FONT_PATH)
+        self.heartRateText = heartRateText
+        self.font = ft.Font(FONT_PATH2)
 
     def get_color(self):
         time = pg.time.get_ticks() * 0.001
@@ -22,10 +23,16 @@ class Text:
         self.font.render_to(self.app.screen, (WIN_W * 0.595, WIN_H * 0.02),
                             text='TETRIS', fgcolor=self.get_color(),
                             size=TILE_SIZE * 1.65, bgcolor='black')
+        self.font.render_to(self.app.screen, (WIN_W * 0.6, WIN_H * 0.28),
+                            text="Heart Rate: ", fgcolor='white',
+                            size=TILE_SIZE * 0.6, bgcolor='green')
+        self.font.render_to(self.app.screen, (WIN_W * 0.85, WIN_H * 0.28),
+                            text=str(self.heartRateText.heart_rate), fgcolor=self.heartRateText.font_color,
+                            size=TILE_SIZE * 0.6)
         self.font.render_to(self.app.screen, (WIN_W * 0.65, WIN_H * 0.40),
                             text='next', fgcolor='orange',
                             size=TILE_SIZE * 1.4, bgcolor='black')
-        self.font.render_to(self.app.screen, (WIN_W * 0.64, WIN_H * 0.67),
+        self.font.render_to(self.app.screen, (WIN_W * 0.64, WIN_H * 0.72),
                             text='score', fgcolor='orange',
                             size=TILE_SIZE * 1.4, bgcolor='black')
         self.font.render_to(self.app.screen, (WIN_W * 0.64, WIN_H * 0.8),

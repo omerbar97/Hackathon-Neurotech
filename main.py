@@ -2,14 +2,14 @@ import random
 import threading
 import time
 
-from HeartRateSprite import HeartRateSprite
+from HeartRateSprite import HeartRateSprite, HeartRateText
 from settings import *
 from tetris import Tetris, Text
 import sys
 import pathlib
 
 
-def update_heart_rate_value(heart_rate_visualization, heart_rate_values):
+def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_rate_text_in):
     while True:
         # random.shuffle(heart_rate_values)
         for value in heart_rate_values:
@@ -32,21 +32,26 @@ def update_heart_rate_value(heart_rate_visualization, heart_rate_values):
 
             heart_rate_visualization.amplitude = new_value
             heart_rate_visualization.speed = new_speed
+            heart_rate_text_in.heart_rate = new_value * 5
+            # converting to int
+            heart_rate_text_in.heart_rate = int(heart_rate_text_in.heart_rate)
+            heart_rate_text_in.text = 'Heart Rate: '
 
             if value > 1.5:
                 heart_rate_visualization.line_color = 'red'
-                print("change")
+                heart_rate_text_in.font_color = 'red'
             else:
                 heart_rate_visualization.line_color = 'green'
+                heart_rate_text.font_color = 'green'
             time.sleep(random.uniform(2, 3))
 
 
 
 heart_rate_values = [0.4, 1.2, 0.4, 1.1, 1.8]
 heart_rate = HeartRateSprite(300, 150, 50, 10, 'green', 2)
-
+heart_rate_text = HeartRateText(530, 120, 'Heart Rate', 30, 'white')
 update_thread = threading.Thread(target=update_heart_rate_value,
-                                 args=(heart_rate, heart_rate_values))
+                                 args=(heart_rate, heart_rate_values, heart_rate_text))
 update_thread.start()
 
 class App:
@@ -58,7 +63,7 @@ class App:
         self.set_timer()
         self.images = self.load_images()
         self.tetris = Tetris(self, heart_rate)
-        self.text = Text(self)
+        self.text = Text(self, heart_rate_text)
 
     def load_images(self):
         files = [item for item in pathlib.Path(SPRITE_DIR_PATH).rglob('*.png') if item.is_file()]
