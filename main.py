@@ -3,6 +3,7 @@ import threading
 import time
 
 from HeartRateSprite import HeartRateSprite, HeartRateText
+from MovingBall import MovingBall
 from settings import *
 from tetris import Tetris, Text
 import sys
@@ -10,12 +11,12 @@ import pathlib
 from sound import Sound
 
 
-def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_rate_text_in, app, lock, sound_danger, sound_track):
+def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_rate_text_in, app, sound_danger, sound_track):
 
     while True:
-        sound_danger.volume = 0
+        # sound_danger.volume = 0
         sound_track.play_sound(1)
-        sound_danger.play_sound(1)
+        # sound_danger.play_sound(1)
         for value in heart_rate_values:
             proximity = abs(value - 2)
             probability = 1 - proximity  # Probability inversely proportional to proximity to 2
@@ -43,14 +44,16 @@ def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_r
             heart_rate_text_in.text = 'Heart Rate: '
 
             lst = []
-            if value > 1.2:
+            if value > 1.1:
                 # if(sound_track.is_playing()):
                 #     sound_track.stop_sound()
                 # if(not sound_danger.is_playing()):
                 #     sound_danger.play_sound(1)
+                sound_track.volume = 1
                 app.isActive = True
+                app.shake_screen(10 , 40)
                 sound_track.volume = 0
-                sound_danger.volume = 0.5
+                sound_danger.volume = 0
                 heart_rate_visualization.line_color = 'red'
                 heart_rate_text_in.font_color = 'red'
                 app.field_color = (200, 0, 0)
@@ -63,7 +66,6 @@ def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_r
                             lst.append(block)
 
             else:
-                app.isActive = False
                 heart_rate_visualization.line_color = 'green'
                 heart_rate_text.font_color = 'green'
                 app.field_color = FIELD_COLOR
@@ -96,6 +98,7 @@ heart_rate_values = [random.uniform(0, 2) for _ in range(num_samples)]
 print(heart_rate_values)
 heart_rate = HeartRateSprite(300, 150, 50, 10, 'green', 2)
 heart_rate_text = HeartRateText(530, 120, 'Heart Rate', 30, 'white')
+
 class App:
     def __init__(self):
         pg.init()
@@ -109,12 +112,19 @@ class App:
         self.tetris = Tetris(self, heart_rate)
         self.text = Text(self, heart_rate_text)
         self.isActive = False
+        self.shake_intensity = 0
+        self.shake_duration = 0
 
     def load_images(self):
         files = [item for item in pathlib.Path(SPRITE_DIR_PATH).rglob('*.png') if item.is_file()]
         images = [pg.image.load(file).convert_alpha() for file in files]
         images = [pg.transform.scale(image, (TILE_SIZE, TILE_SIZE)) for image in images]
         return images, files
+
+    def shake_screen(self, intensity, duration):
+        self.isActive = True
+        self.shake_intensity = intensity
+        self.shake_duration = duration
 
     def set_timer(self):
         self.user_event = pg.USEREVENT + 0
@@ -131,7 +141,25 @@ class App:
     def draw(self):
         self.screen.fill(color=self.bg_color)
         self.screen.fill(color=self.field_color, rect=(0, 0, *FIELD_RES))
-        self.tetris.draw()
+        if self.isActive:
+            # Generate random offsets for shake effect
+            shake_offset_x = random.randint(-self.shake_intensity, self.shake_intensity)
+            shake_offset_y = random.randint(-self.shake_intensity, self.shake_intensity)
+
+            # Apply shake effect to the screen position
+            screen_x = self.screen.get_width() // 2 + shake_offset_x
+            screen_y = self.screen.get_height() // 2 + shake_offset_y
+            self.screen.fill(self.bg_color)
+            # Draw game objects here using the adjusted screen position
+
+            self.tetris.draw(shake_offset_x, shake_offset_y)
+            self.shake_duration -= 1
+            if self.shake_duration <= 0:
+                self.isActive = False
+
+        else:
+            self.tetris.draw(0, 0)
+
         self.text.draw()
         pg.display.flip()
 
@@ -161,12 +189,12 @@ l1.stop_sound()
 
 l2 = Sound('assets/sound_track.mp3', 2)
 
-
 lock = threading.Lock()
 update_thread = threading.Thread(target=update_heart_rate_value,
-                                 args=(heart_rate, heart_rate_values, heart_rate_text, app, lock, l1, l2))
+                                 args=(heart_rate, heart_rate_values, heart_rate_text, app, l1, l2))
 update_thread.start()
-print(WIN_RES)
+
+
 
 if __name__ == '__main__':
     app.run()

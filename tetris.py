@@ -1,6 +1,7 @@
 import random
 import time
 
+from MovingBall import MovingBall
 from settings import *
 import math
 
@@ -58,6 +59,7 @@ class Tetris:
         self.full_lines = 0
         self.points_per_lines = {0: 0, 1: 100, 2: 300, 3: 700, 4: 1500}
         self.sound = Sound('assets/end_line.wav', volume=1)
+        self.movingBall = MovingBall(150, 150, 25, (255, 255, 255), 35)
 
     def get_score(self):
         self.score += self.points_per_lines[self.full_lines]
@@ -117,11 +119,11 @@ class Tetris:
         elif pressed_key == pg.K_DOWN:
             self.speed_up = True
 
-    def draw_grid(self):
+    def draw_grid(self, shake_offset_x, shake_offset_y):
         for x in range(FIELD_W):
             for y in range(FIELD_H):
                 pg.draw.rect(self.app.screen, 'black',
-                             (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE), 1)
+                             (x * TILE_SIZE + shake_offset_x, y * TILE_SIZE + shake_offset_y, TILE_SIZE, TILE_SIZE), 1)
 
     def update(self):
         trigger = [self.app.anim_trigger, self.app.fast_anim_trigger][self.speed_up]
@@ -130,10 +132,14 @@ class Tetris:
             self.tetromino.update()
             self.check_tetromino_landing()
             self.get_score()
+        if self.app.isActive:
+            self.movingBall.update()
         self.sprite_group.update()
 
-    def draw(self, shake_offset_x, shake_offset_y
+    def draw(self, shake_offset_x, shake_offset_y):
         self.draw_grid(shake_offset_x, shake_offset_y)
+        if self.app.isActive:
+            self.movingBall.draw(self.app.screen)
         self.sprite_group.draw(self.app.screen)
 
 

@@ -53,7 +53,7 @@ class Block(pg.sprite.Sprite):
 
     def update(self):
         self.is_alive()
-        if(self.isBlur):
+        if (self.isBlur):
             # Load the image
             image = Image.open(self.file_image)
             r = random.randint(50, 80)
@@ -112,14 +112,3 @@ class Tetromino:
 
     def update(self):
         self.move(direction='down')
-
-
-
-
-
-
-
-
-
-
-
