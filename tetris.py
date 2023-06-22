@@ -1,7 +1,11 @@
+import random
+import time
+
 from settings import *
 import math
 from tetromino import Tetromino
 import pygame.freetype as ft
+from HeartRateSprite import *
 
 
 class Text:
@@ -18,7 +22,7 @@ class Text:
         self.font.render_to(self.app.screen, (WIN_W * 0.595, WIN_H * 0.02),
                             text='TETRIS', fgcolor=self.get_color(),
                             size=TILE_SIZE * 1.65, bgcolor='black')
-        self.font.render_to(self.app.screen, (WIN_W * 0.65, WIN_H * 0.22),
+        self.font.render_to(self.app.screen, (WIN_W * 0.65, WIN_H * 0.40),
                             text='next', fgcolor='orange',
                             size=TILE_SIZE * 1.4, bgcolor='black')
         self.font.render_to(self.app.screen, (WIN_W * 0.64, WIN_H * 0.67),
@@ -29,10 +33,13 @@ class Text:
                             size=TILE_SIZE * 1.8)
 
 
+
 class Tetris:
-    def __init__(self, app):
+    def __init__(self, app, heart_rate_visualization):
         self.app = app
+        self.heartRate= heart_rate_visualization
         self.sprite_group = pg.sprite.Group()
+        self.sprite_group.add(self.heartRate)
         self.field_array = self.get_field_array()
         self.tetromino = Tetromino(self)
         self.next_tetromino = Tetromino(self, current=False)
@@ -116,6 +123,7 @@ class Tetris:
     def draw(self):
         self.draw_grid()
         self.sprite_group.draw(self.app.screen)
+
 
 
 
