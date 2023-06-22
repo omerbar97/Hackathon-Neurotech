@@ -1,4 +1,4 @@
-import 
+from settings import *
 import sys
 
 class App:
@@ -12,7 +12,7 @@ class App:
         self.clock = pg.time.Clock()
 
     def draw(self):
-        self.screen.fill((0, 0, 0))
+        self.screen.fill(FILL_COLOR)
         pg.display.flip()
 
     def check_events(self):
