@@ -7,11 +7,15 @@ from settings import *
 from tetris import Tetris, Text
 import sys
 import pathlib
+from sound import Sound
 
 
-def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_rate_text_in, app, lock):
+def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_rate_text_in, app, lock, sound_danger, sound_track):
+
     while True:
-        # random.shuffle(heart_rate_values)
+        sound_danger.volume = 0
+        sound_track.play_sound(1)
+        sound_danger.play_sound(1)
         for value in heart_rate_values:
             proximity = abs(value - 2)
             probability = 1 - proximity  # Probability inversely proportional to proximity to 2
@@ -39,7 +43,14 @@ def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_r
             heart_rate_text_in.text = 'Heart Rate: '
 
             lst = []
-            if value > 1.5:
+            if value > 1.2:
+                # if(sound_track.is_playing()):
+                #     sound_track.stop_sound()
+                # if(not sound_danger.is_playing()):
+                #     sound_danger.play_sound(1)
+                app.isActive = True
+                sound_track.volume = 0
+                sound_danger.volume = 0.5
                 heart_rate_visualization.line_color = 'red'
                 heart_rate_text_in.font_color = 'red'
                 app.field_color = (200, 0, 0)
@@ -52,9 +63,16 @@ def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_r
                             lst.append(block)
 
             else:
+                app.isActive = False
                 heart_rate_visualization.line_color = 'green'
                 heart_rate_text.font_color = 'green'
                 app.field_color = FIELD_COLOR
+                sound_track.volume = 0.5
+                sound_danger.volume = 0
+                # if(not sound_track.is_playing()):
+                #     sound_track.play_sound(1)
+                # if(sound_danger.is_playing()):
+                #     sound_danger.stop_sound()
             time.sleep(random.uniform(1, 2))
 
             # clearing the blur
@@ -90,6 +108,7 @@ class App:
         self.images, self.files = self.load_images()
         self.tetris = Tetris(self, heart_rate)
         self.text = Text(self, heart_rate_text)
+        self.isActive = False
 
     def load_images(self):
         files = [item for item in pathlib.Path(SPRITE_DIR_PATH).rglob('*.png') if item.is_file()]
@@ -137,12 +156,17 @@ class App:
             self.draw()
 
 app = App()
+l1 = Sound('assets/brain-damage.mp3', 1)
+l1.stop_sound()
+
+l2 = Sound('assets/sound_track.mp3', 2)
+
 
 lock = threading.Lock()
 update_thread = threading.Thread(target=update_heart_rate_value,
-                                 args=(heart_rate, heart_rate_values, heart_rate_text, app, lock))
+                                 args=(heart_rate, heart_rate_values, heart_rate_text, app, lock, l1, l2))
 update_thread.start()
-
+print(WIN_RES)
 
 if __name__ == '__main__':
     app.run()

@@ -3,6 +3,8 @@ import time
 
 from settings import *
 import math
+
+from sound import Sound
 from tetromino import Tetromino
 import pygame.freetype as ft
 from HeartRateSprite import *
@@ -55,6 +57,7 @@ class Tetris:
         self.score = 0
         self.full_lines = 0
         self.points_per_lines = {0: 0, 1: 100, 2: 300, 3: 700, 4: 1500}
+        self.sound = Sound('assets/end_line.wav', volume=1)
 
     def get_score(self):
         self.score += self.points_per_lines[self.full_lines]
@@ -73,6 +76,7 @@ class Tetris:
                 row -= 1
             else:
                 for x in range(FIELD_W):
+                    self.sound.play_sound(1)
                     self.field_array[row][x].alive = False
                     self.field_array[row][x] = 0
 
@@ -128,8 +132,8 @@ class Tetris:
             self.get_score()
         self.sprite_group.update()
 
-    def draw(self):
-        self.draw_grid()
+    def draw(self, shake_offset_x, shake_offset_y
+        self.draw_grid(shake_offset_x, shake_offset_y)
         self.sprite_group.draw(self.app.screen)
 
 
