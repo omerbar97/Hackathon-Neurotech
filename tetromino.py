@@ -1,16 +1,20 @@
 from settings import *
 import random
+from PIL import Image, ImageFilter
 
 
 class Block(pg.sprite.Sprite):
-    def __init__(self, tetromino, pos):
+    def __init__(self, tetromino, pos, file_image):
         self.tetromino = tetromino
         self.pos = vec(pos) + INIT_POS_OFFSET
         self.next_pos = vec(pos) + NEXT_POS_OFFSET
         self.alive = True
+        self.isBlur = False
+        self.file_image = file_image
 
         super().__init__(tetromino.tetris.sprite_group)
         self.image = tetromino.image
+        self.original_image = self.image
         self.rect = self.image.get_rect()
 
         self.sfx_image = self.image.copy()
@@ -49,6 +53,20 @@ class Block(pg.sprite.Sprite):
 
     def update(self):
         self.is_alive()
+        if(self.isBlur):
+            # Load the image
+            image = Image.open(self.file_image)
+            r = random.randint(50, 80)
+            # Apply Gaussian blur
+            blurred_image = image.filter(ImageFilter.GaussianBlur(radius=r))
+
+            # Convert the blurred image to a Pygame surface
+            blurred_surface = pg.image.fromstring(blurred_image.tobytes(), blurred_image.size, blurred_image.mode)
+
+            # Scale the blurred image to the original size
+            self.image = pg.transform.smoothscale(blurred_surface, self.original_image.get_size())
+        else:
+            self.image = self.original_image
         self.set_rect_pos()
 
     def is_collide(self, pos):
@@ -61,10 +79,12 @@ class Block(pg.sprite.Sprite):
 
 class Tetromino:
     def __init__(self, tetris, current=True):
+        l = random.randint(0, 5)
         self.tetris = tetris
         self.shape = random.choice(list(TETROMINOES.keys()))
-        self.image = random.choice(tetris.app.images)
-        self.blocks = [Block(self, pos) for pos in TETROMINOES[self.shape]]
+        self.image = tetris.app.images[l]
+        self.file_image = tetris.app.files[l]
+        self.blocks = [Block(self, pos, self.file_image) for pos in TETROMINOES[self.shape]]
         self.landing = False
         self.current = current
 

@@ -25,7 +25,7 @@ class Text:
                             size=TILE_SIZE * 1.65, bgcolor='black')
         self.font.render_to(self.app.screen, (WIN_W * 0.6, WIN_H * 0.28),
                             text="Heart Rate: ", fgcolor='white',
-                            size=TILE_SIZE * 0.6, bgcolor='green')
+                            size=TILE_SIZE * 0.6, bgcolor=self.heartRateText.font_color)
         self.font.render_to(self.app.screen, (WIN_W * 0.85, WIN_H * 0.28),
                             text=str(self.heartRateText.heart_rate), fgcolor=self.heartRateText.font_color,
                             size=TILE_SIZE * 0.6)
@@ -51,7 +51,7 @@ class Tetris:
         self.tetromino = Tetromino(self)
         self.next_tetromino = Tetromino(self, current=False)
         self.speed_up = False
-
+        self.tetrominoLst = []
         self.score = 0
         self.full_lines = 0
         self.points_per_lines = {0: 0, 1: 100, 2: 300, 3: 700, 4: 1500}
@@ -99,6 +99,7 @@ class Tetris:
                 self.speed_up = False
                 self.put_tetromino_blocks_in_array()
                 self.next_tetromino.current = True
+                self.tetrominoLst.append(self.tetromino)
                 self.tetromino = self.next_tetromino
                 self.next_tetromino = Tetromino(self, current=False)
 

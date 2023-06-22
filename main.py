@@ -9,7 +9,7 @@ import sys
 import pathlib
 
 
-def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_rate_text_in):
+def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_rate_text_in, app, lock):
     while True:
         # random.shuffle(heart_rate_values)
         for value in heart_rate_values:
@@ -26,34 +26,58 @@ def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_r
             # Generate a new value using a Gaussian distribution
             new_value = random.gauss(mean, std_deviation)
             new_value = max(5, min(60, new_value))  # Ensure the generated value is within the range [5, 60]
+            heart_value = max(50, min(200, 5*new_value))
             print(new_value)
             new_speed = random.gauss(mean2, std_deviation2)
             new_speed = max(2, min(8, new_speed))  # Ensure the generated value is within the range [2, 8]
 
             heart_rate_visualization.amplitude = new_value
             heart_rate_visualization.speed = new_speed
-            heart_rate_text_in.heart_rate = new_value * 5
+            heart_rate_text_in.heart_rate = heart_value
             # converting to int
             heart_rate_text_in.heart_rate = int(heart_rate_text_in.heart_rate)
             heart_rate_text_in.text = 'Heart Rate: '
 
+            lst = []
             if value > 1.5:
                 heart_rate_visualization.line_color = 'red'
                 heart_rate_text_in.font_color = 'red'
+                app.field_color = (200, 0, 0)
+                tetrominoLst = app.tetris.tetrominoLst
+                for tetromino in tetrominoLst:
+                    for block in tetromino.blocks:
+                        l = random.randint(0, 1)
+                        if(l == 0):
+                            block.isBlur = True
+                            lst.append(block)
+
             else:
                 heart_rate_visualization.line_color = 'green'
                 heart_rate_text.font_color = 'green'
-            time.sleep(random.uniform(2, 3))
+                app.field_color = FIELD_COLOR
+            time.sleep(random.uniform(1, 2))
+
+            # clearing the blur
+            for block in lst:
+                block.isBlur = False
 
 
+def change_background_color(app, heart_rate_values, lock):
+    for value in heart_rate_values:
+        lock.acquire()
+        if value > 1.5:
+            app.field_color = (200, 0, 0)
+        else:
+            app.field_color = FIELD_COLOR
+        lock.release()
+    time.sleep(1)
 
-heart_rate_values = [0.4, 1.2, 0.4, 1.1, 1.8]
+
+num_samples = 1000
+heart_rate_values = [random.uniform(0, 2) for _ in range(num_samples)]
+print(heart_rate_values)
 heart_rate = HeartRateSprite(300, 150, 50, 10, 'green', 2)
 heart_rate_text = HeartRateText(530, 120, 'Heart Rate', 30, 'white')
-update_thread = threading.Thread(target=update_heart_rate_value,
-                                 args=(heart_rate, heart_rate_values, heart_rate_text))
-update_thread.start()
-
 class App:
     def __init__(self):
         pg.init()
@@ -61,7 +85,9 @@ class App:
         self.screen = pg.display.set_mode(WIN_RES)
         self.clock = pg.time.Clock()
         self.set_timer()
-        self.images = self.load_images()
+        self.bg_color = BG_COLOR
+        self.field_color = FIELD_COLOR
+        self.images, self.files = self.load_images()
         self.tetris = Tetris(self, heart_rate)
         self.text = Text(self, heart_rate_text)
 
@@ -69,7 +95,7 @@ class App:
         files = [item for item in pathlib.Path(SPRITE_DIR_PATH).rglob('*.png') if item.is_file()]
         images = [pg.image.load(file).convert_alpha() for file in files]
         images = [pg.transform.scale(image, (TILE_SIZE, TILE_SIZE)) for image in images]
-        return images
+        return images, files
 
     def set_timer(self):
         self.user_event = pg.USEREVENT + 0
@@ -84,8 +110,8 @@ class App:
         self.clock.tick(FPS)
 
     def draw(self):
-        self.screen.fill(color=BG_COLOR)
-        self.screen.fill(color=FIELD_COLOR, rect=(0, 0, *FIELD_RES))
+        self.screen.fill(color=self.bg_color)
+        self.screen.fill(color=self.field_color, rect=(0, 0, *FIELD_RES))
         self.tetris.draw()
         self.text.draw()
         pg.display.flip()
@@ -110,7 +136,13 @@ class App:
             self.update()
             self.draw()
 
+app = App()
+
+lock = threading.Lock()
+update_thread = threading.Thread(target=update_heart_rate_value,
+                                 args=(heart_rate, heart_rate_values, heart_rate_text, app, lock))
+update_thread.start()
+
 
 if __name__ == '__main__':
-    app = App()
     app.run()
