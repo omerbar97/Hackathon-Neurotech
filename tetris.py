@@ -1,6 +1,7 @@
 import random
 import time
 
+from EndScreen import EndScreen
 from MovingBall import MovingBall
 from settings import *
 import math
@@ -43,11 +44,10 @@ class Text:
                             size=TILE_SIZE * 1.8)
 
 
-
 class Tetris:
-    def __init__(self, app, heart_rate_visualization):
+    def __init__(self, app, heart_rate_visualization, randomLst):
         self.app = app
-        self.heartRate= heart_rate_visualization
+        self.heartRate = heart_rate_visualization
         self.sprite_group = pg.sprite.Group()
         self.sprite_group.add(self.heartRate)
         self.field_array = self.get_field_array()
@@ -59,7 +59,7 @@ class Tetris:
         self.full_lines = 0
         self.points_per_lines = {0: 0, 1: 100, 2: 300, 3: 700, 4: 1500}
         self.sound = Sound('assets/end_line.wav', volume=1)
-        self.movingBall = MovingBall(150, 150, 25, (255, 255, 255), 35)
+        self.movingBall = MovingBall(150, 150, 25, (255, 255, 255), 10, randomLst)
 
     def get_score(self):
         self.score += self.points_per_lines[self.full_lines]
@@ -100,7 +100,7 @@ class Tetris:
     def check_tetromino_landing(self):
         if self.tetromino.landing:
             if self.is_game_over():
-                self.__init__(self.app)
+                self.app.online = False
             else:
                 self.speed_up = False
                 self.put_tetromino_blocks_in_array()
@@ -141,17 +141,3 @@ class Tetris:
         if self.app.isActive:
             self.movingBall.draw(self.app.screen)
         self.sprite_group.draw(self.app.screen)
-
-
-
-
-
-
-
-
-
-
-
-
-
-

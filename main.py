@@ -1,40 +1,55 @@
 import random
 import threading
 import time
-
+from EndScreen import EndScreen
 from HeartRateSprite import HeartRateSprite, HeartRateText
-from MovingBall import MovingBall
 from settings import *
 from tetris import Tetris, Text
 import sys
 import pathlib
 from sound import Sound
 
+# all abcde..... letters
+letters = [chr(i) for i in range(97, 123)]
 
-def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_rate_text_in, app, sound_danger, sound_track):
+def generate_heart_rate(number):
+    decimal_distance_from_2 = abs(number - 2)  # Decimal part as the distance from 2
+    max_heart_rate = 200 - int(decimal_distance_from_2 * 100)  # Maximum heart rate based on the decimal distance from 2
 
-    while True:
+    if random.random() < (number / 2):  # Probability based on the number
+        heart_rate = random.randint(max_heart_rate, 200)  # Random heart rate between max_heart_rate and 200
+    else:
+        heart_rate = random.randint(50, max_heart_rate)  # Random heart rate between 50 and max_heart_rate
+
+    return heart_rate
+
+
+def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_rate_text_in, app, sound_danger,
+                            sound_track):
+    while app.online:
         # sound_danger.volume = 0
         sound_track.play_sound(1)
         # sound_danger.play_sound(1)
         for value in heart_rate_values:
+            if (app.online == False):
+                break
             proximity = abs(value - 2)
             probability = 1 - proximity  # Probability inversely proportional to proximity to 2
 
             # Calculate the mean and standard deviation based on probability
             mean = (60 - 5) * probability + 5
-            std_deviation = (mean - 5) / 3
+            std_deviation = (mean - 5) / 7
 
             mean2 = (8 - 2) * probability + 2
-            std_deviation2 = (mean2 - 2) / 2
-
+            std_deviation2 = (mean2 - 2) / 7
+            rndInt = random.randint(50, 70)
             # Generate a new value using a Gaussian distribution
             new_value = random.gauss(mean, std_deviation)
-            new_value = max(5, min(60, new_value))  # Ensure the generated value is within the range [5, 60]
-            heart_value = max(50, min(200, 5*new_value))
-            print(new_value)
+            new_value = max(5, min(60, int(new_value)))  # Ensure the generated value is within the range [5, 60]
+            new_value1 = random.gauss(mean2, std_deviation)
+            heart_value = max(rndInt, min(200, 3 * int(new_value1)))
             new_speed = random.gauss(mean2, std_deviation2)
-            new_speed = max(2, min(8, new_speed))  # Ensure the generated value is within the range [2, 8]
+            new_speed = max(2, min(8, int(new_speed)))  # Ensure the generated value is within the range [2, 8]
 
             heart_rate_visualization.amplitude = new_value
             heart_rate_visualization.speed = new_speed
@@ -45,13 +60,16 @@ def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_r
 
             lst = []
             if value > 1.1:
+                if(heart_value < 80):
+                    heart_value = random.randint(80, 120)
+                    heart_rate_text_in.heart_rate = heart_value
                 # if(sound_track.is_playing()):
                 #     sound_track.stop_sound()
                 # if(not sound_danger.is_playing()):
                 #     sound_danger.play_sound(1)
                 sound_track.volume = 1
                 app.isActive = True
-                app.shake_screen(10 , 40)
+                app.shake_screen(10, 40)
                 sound_track.volume = 0
                 sound_danger.volume = 0
                 heart_rate_visualization.line_color = 'red'
@@ -61,7 +79,7 @@ def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_r
                 for tetromino in tetrominoLst:
                     for block in tetromino.blocks:
                         l = random.randint(0, 1)
-                        if(l == 0):
+                        if (l == 0):
                             block.isBlur = True
                             lst.append(block)
 
@@ -75,7 +93,7 @@ def update_heart_rate_value(heart_rate_visualization, heart_rate_values, heart_r
                 #     sound_track.play_sound(1)
                 # if(sound_danger.is_playing()):
                 #     sound_danger.stop_sound()
-            time.sleep(random.uniform(1, 2))
+            time.sleep(1.5)
 
             # clearing the blur
             for block in lst:
@@ -99,17 +117,28 @@ print(heart_rate_values)
 heart_rate = HeartRateSprite(300, 150, 50, 10, 'green', 2)
 heart_rate_text = HeartRateText(530, 120, 'Heart Rate', 30, 'white')
 
+# generating round letter in size of 6-10
+randomLst = []
+for i in letters:
+    r = random.randint(0, 4)
+    if r == 1:
+        randomLst.append(i)
+
+print(randomLst)
+
+
 class App:
     def __init__(self):
         pg.init()
         pg.display.set_caption('Tetris NeuroTech')
         self.screen = pg.display.set_mode(WIN_RES)
+        self.online = True
         self.clock = pg.time.Clock()
         self.set_timer()
         self.bg_color = BG_COLOR
         self.field_color = FIELD_COLOR
         self.images, self.files = self.load_images()
-        self.tetris = Tetris(self, heart_rate)
+        self.tetris = Tetris(self, heart_rate, randomLst)
         self.text = Text(self, heart_rate_text)
         self.isActive = False
         self.shake_intensity = 0
@@ -178,10 +207,11 @@ class App:
                 self.fast_anim_trigger = True
 
     def run(self):
-        while True:
+        while app.online:
             self.check_events()
             self.update()
             self.draw()
+
 
 app = App()
 l1 = Sound('assets/brain-damage.mp3', 1)
@@ -194,7 +224,11 @@ update_thread = threading.Thread(target=update_heart_rate_value,
                                  args=(heart_rate, heart_rate_values, heart_rate_text, app, l1, l2))
 update_thread.start()
 
-
-
 if __name__ == '__main__':
     app.run()
+
+    # joing the thread
+    update_thread.join()
+
+    # closing the screen
+    pg.quit()
